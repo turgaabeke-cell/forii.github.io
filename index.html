@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Matrix Heart Ultra</title>
+<style>
+body {
+    margin:0;
+    overflow:hidden;
+    background:black;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    position:absolute;
+    top:0;
+    left:0;
+}
+
+/* ❤️ Прозрачное сердце с биением */
+.heart {
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:350px;
+    height:350px;
+    transform:translate(-50%, -50%);
+    z-index:5;
+    filter: drop-shadow(0 0 40px hotpink);
+    animation: beat 1.5s infinite;
+}
+
+@keyframes beat{
+    0%,100%{transform:translate(-50%,-50%) scale(1);}
+    50%{transform:translate(-50%,-50%) scale(1.1);}
+}
+
+.heart svg{
+    width:100%;
+    height:100%;
+}
+
+.heart path{
+    fill:none;
+    stroke:hotpink;
+    stroke-width:3;
+    stroke-dasharray:400;
+    stroke-dashoffset:400;
+    animation: draw 3s forwards;
+}
+
+@keyframes draw{
+    to{stroke-dashoffset:0;}
+}
+
+/* 💬 Текст внутри сердца */
+.text{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    color: hotpink;
+    text-align:center;
+    z-index:10;
+    font-size:24px;
+    text-shadow:
+        0 0 5px hotpink,
+        0 0 15px hotpink,
+        0 0 25px hotpink;
+}
+
+/* Курсор */
+.cursor{
+    display:inline-block;
+    width:2px;
+    background:hotpink;
+    margin-left:5px;
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    50%{opacity:0;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="heart">
+<svg viewBox="0 0 100 100">
+<path d="M50 90 L10 50 A20 20 0 0 1 50 20 A20 20 0 0 1 90 50 Z"/>
+</svg>
+</div>
+
+<div class="text">
+    <span id="typing">Здесь твой текст</span><span class="cursor"></span>
+</div>
+
+<script>
+// Canvas
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+// Матрица с 3 слоями
+const fontSize = 18;
+const letters="0123456789";
+const layers = [
+    {cols:Math.floor(canvas.width/fontSize), drops:[], color:"hotpink"},
+    {cols:Math.floor(canvas.width/fontSize), drops:[], color:"#ff69b4"},
+    {cols:Math.floor(canvas.width/fontSize), drops:[], color:"#ff1493"}
+];
+
+layers.forEach(layer => {for(let i=0;i<layer.cols;i++){layer.drops[i]=1;}});
+
+function drawMatrixLayer(layer){
+    ctx.fillStyle="rgba(0,0,0,0.05)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle=layer.color;
+    ctx.font=fontSize+"px monospace";
+    for(let i=0;i<layer.cols;i++){
+        let text=letters[Math.floor(Math.random()*letters.length)];
+        ctx.fillText(text,i*fontSize,layer.drops[i]*fontSize);
+        if(layer.drops[i]*fontSize>canvas.height && Math.random() > 0.975) layer.drops[i]=0;
+        layer.drops[i]++;
+    }
+}
+
+function animateMatrix(){
+    layers.forEach(layer=>drawMatrixLayer(layer));
+    requestAnimationFrame(animateMatrix);
+}
+animateMatrix();
+
+// Частицы вокруг сердца
+const particles=[];
+for(let i=0;i<80;i++){
+    particles.push({
+        x:window.innerWidth/2,
+        y:window.innerHeight/2,
+        dx:(Math.random()-0.5)*2,
+        dy:(Math.random()-0.5)*2,
+        r:Math.random()*2+1,
+        alpha:Math.random()
+    });
+}
+
+function drawParticles(){
+    particles.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,105,180,${p.alpha})`;
+        ctx.fill();
+        p.x+=p.dx; p.y+=p.dy;
+        p.alpha-=0.005;
+        if(p.alpha<=0){p.x=window.innerWidth/2;p.y=window.innerHeight/2;p.alpha=1;}
+    });
+    requestAnimationFrame(drawParticles);
+}
+drawParticles();
+</script>
+
+</body>
+</html>
